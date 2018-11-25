@@ -10,7 +10,10 @@ kMeansStep vs = do
   maybeMs <- get
   put $ do
     ms <- maybeMs
-    sequence $ map meanPoint $ map (flip filter vs . (>>>) (flip closest ms) . (==)) $ ms
+    sequence $ map meanPoint $ cluster vs ms -- map (flip filter vs . (>>>) (flip closest ms) . (==)) $ ms
+
+cluster :: (Distanceable v, Eq v) => [v] -> [v] -> [[v]]
+cluster vs ms = map (flip filter vs . (>>>) (flip closest ms) . (==)) $ ms
 
 kMeansF :: (Distanceable v, Averageable v, Eq v) => [v] -> KMeansState v ()
 kMeansF vs = do
@@ -18,3 +21,7 @@ kMeansF vs = do
   kMeansStep vs
   ms' <- get
   if ms == ms' then return () else kMeansF vs
+
+kMeans :: (Distanceable v, Averageable v, Eq v) => Int -> [v] -> Maybe [v] 
+kMeans n vs =
+  execState (kMeansF vs) $ Just $ take n vs
